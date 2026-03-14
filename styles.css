@@ -1,0 +1,1122 @@
+/* ============================================
+   3D UI / Hyper-realism — личный сайт
+   Объём, глубина, реалистичные тени
+   ============================================ */
+
+/* Акцент и палитра под 3D-тему */
+:root {
+  --accent: #2842eb;
+  --bg: #05080a;
+  --text: #7eb8f5;
+  --text-muted: #5a9fd4;
+  --surface: rgba(12, 18, 22, 0.92);
+  --surface-highlight: rgba(255, 255, 255, 0.06);
+  --shadow-ambient: 0 2px 8px rgba(0, 0, 0, 0.4);
+  --shadow-soft: 0 8px 32px rgba(0, 0, 0, 0.5);
+  --shadow-deep: 0 20px 60px rgba(0, 0, 0, 0.6);
+  --bevel-light: rgba(255, 255, 255, 0.08);
+  --bevel-dark: rgba(0, 0, 0, 0.35);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: system-ui, -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+/* Hero-блок: на весь экран, контент по центру */
+/* --mouse-x, --mouse-y: позиция курсора 0–1, задаются из JS */
+.hero {
+  --mouse-x: 0.5;
+  --mouse-y: 0.5;
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1.5rem;
+  overflow: hidden;
+  text-align: center;
+}
+
+/* Слой с динамическим фоном — 3D-глубина, «свет сверху» */
+.hero__bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background:
+    radial-gradient(
+      ellipse 120% 80% at 50% -20%,
+      rgba(20, 35, 45, 0.7) 0%,
+      transparent 50%
+    ),
+    radial-gradient(
+      ellipse 100% 100% at 80% 100%,
+      rgba(10, 25, 30, 0.5) 0%,
+      transparent 45%
+    ),
+    linear-gradient(
+      180deg,
+      #070d10 0%,
+      #061014 25%,
+      #050a0e 60%,
+      #04080a 100%
+    );
+  background-size: 100% 100%, 100% 100%, 200% 200%;
+  background-position: 0 0, 0 0, 0 50%;
+  animation: gradientShift 15s ease infinite;
+}
+
+/* Лёгкое пятно света за курсором (взаимодействие с пользователем) */
+.hero__cursor-glow {
+  position: absolute;
+  left: calc(var(--mouse-x) * 100%);
+  top: calc(var(--mouse-y) * 100%);
+  width: min(80vw, 380px);
+  height: min(80vw, 380px);
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(45, 212, 191, 0.22) 0%,
+    rgba(20, 184, 166, 0.08) 50%,
+    transparent 65%
+  );
+  filter: blur(50px);
+  opacity: 0.7;
+  pointer-events: none;
+  transition: left 0.25s ease-out, top 0.25s ease-out;
+}
+
+/* Обёртка орба: параллакс от позиции курсора */
+.hero__orb-wrap {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  transition: transform 0.5s ease-out;
+  transform: translate(
+    calc((var(--mouse-x) - 0.5) * 5%),
+    calc((var(--mouse-y) - 0.5) * 5%)
+  );
+}
+
+.hero__orb-wrap--1 { z-index: 0; }
+.hero__orb-wrap--2 { z-index: 0; transform: translate(
+  calc((var(--mouse-x) - 0.5) * -4%),
+  calc((var(--mouse-y) - 0.5) * -4%)
+); }
+
+/* Мягкие светящиеся орбы — автономная лёгкая анимация */
+.hero__orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(60px);
+  pointer-events: none;
+}
+
+.hero__orb--1 {
+  width: 50vmax;
+  height: 50vmax;
+  background: radial-gradient(
+    circle,
+    rgba(45, 212, 191, 0.3) 0%,
+    rgba(20, 184, 166, 0.12) 40%,
+    transparent 70%
+  );
+  top: -20%;
+  left: -10%;
+  animation: float1 22s ease-in-out infinite;
+}
+
+.hero__orb--2 {
+  width: 40vmax;
+  height: 40vmax;
+  background: radial-gradient(
+    circle,
+    rgba(94, 234, 212, 0.2) 0%,
+    rgba(20, 184, 166, 0.06) 50%,
+    transparent 60%
+  );
+  bottom: -15%;
+  right: -10%;
+  animation: float2 19s ease-in-out infinite;
+}
+
+/* Вселенная: звёзды + туманности */
+.hero__universe {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+/* Звёзды — яркие, с свечением и мерцанием */
+.hero__stars {
+  position: absolute;
+  inset: 0;
+}
+
+.hero__star {
+  position: absolute;
+  border-radius: 50%;
+  background: #ccfbf1;
+  box-shadow:
+    0 0 6px 2px rgba(204, 251, 241, 0.9),
+    0 0 20px 4px rgba(94, 234, 212, 0.5),
+    0 0 40px 8px rgba(45, 212, 191, 0.25);
+  animation: starTwinkle 3s ease-in-out infinite;
+}
+
+.hero__star--s {
+  width: 3px;
+  height: 3px;
+}
+
+.hero__star--m {
+  width: 5px;
+  height: 5px;
+  box-shadow:
+    0 0 8px 3px rgba(204, 251, 241, 0.95),
+    0 0 28px 6px rgba(94, 234, 212, 0.6),
+    0 0 50px 12px rgba(45, 212, 191, 0.3);
+}
+
+.hero__star--l {
+  width: 8px;
+  height: 8px;
+  box-shadow:
+    0 0 12px 4px rgba(220, 252, 231, 1),
+    0 0 35px 10px rgba(94, 234, 212, 0.7),
+    0 0 60px 20px rgba(45, 212, 191, 0.35);
+}
+
+/* Позиции звёзд */
+.hero__star:nth-child(1) { left: 5%; top: 12%; animation-delay: 0s; }
+.hero__star:nth-child(2) { left: 18%; top: 8%; animation-delay: 0.4s; }
+.hero__star:nth-child(3) { left: 32%; top: 25%; animation-delay: 1.2s; }
+.hero__star:nth-child(4) { left: 75%; top: 18%; animation-delay: 0.8s; }
+.hero__star:nth-child(5) { left: 88%; top: 42%; animation-delay: 2s; }
+.hero__star:nth-child(6) { left: 12%; top: 55%; animation-delay: 0.2s; }
+.hero__star:nth-child(7) { left: 45%; top: 8%; animation-delay: 1.5s; }
+.hero__star:nth-child(8) { left: 62%; top: 65%; animation-delay: 1s; }
+.hero__star:nth-child(9) { left: 85%; top: 78%; animation-delay: 2.2s; }
+.hero__star:nth-child(10) { left: 25%; top: 82%; animation-delay: 0.6s; }
+.hero__star:nth-child(11) { left: 52%; top: 45%; animation-delay: 1.8s; }
+.hero__star:nth-child(12) { left: 8%; top: 35%; animation-delay: 0.3s; }
+.hero__star:nth-child(13) { left: 70%; top: 5%; animation-delay: 1.4s; }
+.hero__star:nth-child(14) { left: 38%; top: 72%; animation-delay: 2.5s; }
+
+/* Дрейф: звёзды медленно плывут по экрану */
+.hero__star--drift {
+  animation: starTwinkle 3s ease-in-out infinite, starDrift 18s linear infinite;
+}
+
+.hero__star--drift:nth-child(12) { animation-delay: 0s, 0s; }
+.hero__star--drift:nth-child(13) { animation-delay: 0.5s, -6s; }
+.hero__star--drift:nth-child(14) { animation-delay: 1s, -12s; }
+
+@keyframes starTwinkle {
+  0%, 100% { opacity: 0.8; }
+  50% { opacity: 1; }
+}
+
+@keyframes starDrift {
+  0% { transform: translate(0, 0); }
+  100% { transform: translate(120vw, -25vh); }
+}
+
+/* Туманности — крупные мягкие облака, создают глубину */
+.hero__nebula {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(70px);
+  opacity: 0.4;
+  animation: nebulaFloat 25s ease-in-out infinite;
+}
+
+.hero__nebula--1 {
+  width: 35vmax;
+  height: 35vmax;
+  background: radial-gradient(
+    circle,
+    rgba(94, 234, 212, 0.35) 0%,
+    rgba(45, 212, 191, 0.12) 40%,
+    transparent 70%
+  );
+  top: -5%;
+  right: -5%;
+  animation-duration: 28s;
+  animation-delay: 0s;
+}
+
+.hero__nebula--2 {
+  width: 45vmax;
+  height: 45vmax;
+  background: radial-gradient(
+    circle,
+    rgba(153, 246, 228, 0.22) 0%,
+    rgba(94, 234, 212, 0.08) 50%,
+    transparent 75%
+  );
+  bottom: -15%;
+  left: -10%;
+  animation-duration: 32s;
+  animation-delay: -10s;
+}
+
+.hero__nebula--3 {
+  width: 25vmax;
+  height: 25vmax;
+  background: radial-gradient(
+    circle,
+    rgba(204, 251, 241, 0.25) 0%,
+    rgba(94, 234, 212, 0.06) 50%,
+    transparent 65%
+  );
+  top: 40%;
+  left: 50%;
+  animation-duration: 22s;
+  animation-delay: -5s;
+}
+
+@keyframes nebulaFloat {
+  0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.35; }
+  33% { transform: translate(8%, -5%) scale(1.1); opacity: 0.5; }
+  66% { transform: translate(-5%, 10%) scale(0.95); opacity: 0.4; }
+}
+
+/* Контент поверх фона */
+.hero__content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Анимация: плавное смещение градиента (только третий слой) */
+@keyframes gradientShift {
+  0%, 100% { background-position: 0 0, 0 0, 0 50%; }
+  50% { background-position: 0 0, 0 0, 100% 50%; }
+}
+
+/* Орбы: медленное «дыхание» + лёгкое пульсирование прозрачности */
+@keyframes float1 {
+  0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.5; }
+  33% { transform: translate(5%, 10%) scale(1.05); opacity: 0.65; }
+  66% { transform: translate(-5%, -5%) scale(0.95); opacity: 0.45; }
+}
+
+@keyframes float2 {
+  0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.5; }
+  50% { transform: translate(-8%, -10%) scale(1.1); opacity: 0.7; }
+}
+
+/* Имя — главный заголовок (+15% к размеру) */
+.hero__name {
+  margin: 0 0 1rem;
+  font-size: clamp(2.3rem, 6.9vw, 4rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text);
+  /* Анимация появления */
+  opacity: 0;
+  transform: translateY(20px);
+  animation: fadeInUp 0.8s ease forwards;
+}
+
+/* Короткое описание (+15%) */
+.hero__bio {
+  margin: 0 0 1.5rem;
+  max-width: 480px;
+  font-size: clamp(1.15rem, 2.88vw, 1.3rem);
+  line-height: 1.6;
+  color: var(--text-muted);
+  opacity: 0;
+  transform: translateY(20px);
+  animation: fadeInUp 0.8s ease 0.15s forwards;
+}
+
+/* Подзаголовок (+15%) */
+.hero__subtitle {
+  margin: 0 0 2rem;
+  font-size: clamp(1.1rem, 2.3vw, 1.27rem);
+  font-weight: 500;
+  color: var(--text-muted);
+  opacity: 0;
+  transform: translateY(20px);
+  animation: fadeInUp 0.8s ease 0.3s forwards;
+}
+
+/* Кнопка CTA — 3D / hyper-real: объём, фаска, тень */
+.hero__cta {
+  display: inline-block;
+  padding: 0.75rem 1.75rem;
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--bg);
+  text-decoration: none;
+  border-radius: 14px;
+  border: none;
+  background: linear-gradient(
+    180deg,
+    rgba(160, 200, 255, 0.95) 0%,
+    var(--text) 35%,
+    #5a8fd4 100%
+  );
+  box-shadow:
+    inset 0 1px 0 var(--bevel-light),
+    inset 0 -1px 0 var(--bevel-dark),
+    0 4px 0 rgba(0, 0, 0, 0.25),
+    0 8px 24px rgba(0, 0, 0, 0.35),
+    0 0 0 1px rgba(0, 0, 0, 0.1);
+  transition: transform 0.15s ease, box-shadow 0.2s ease;
+  opacity: 0;
+  transform: translateY(20px);
+  animation: fadeInUp 0.8s ease 0.45s forwards;
+}
+
+.hero__cta:hover {
+  transform: translateY(-3px);
+  box-shadow:
+    inset 0 1px 0 var(--bevel-light),
+    0 6px 0 rgba(0, 0, 0, 0.2),
+    0 12px 32px rgba(0, 0, 0, 0.4),
+    0 8px 28px rgba(126, 184, 245, 0.25);
+}
+
+.hero__cta:active {
+  transform: translateY(1px);
+  box-shadow:
+    inset 0 2px 4px rgba(0, 0, 0, 0.3),
+    0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.hero__cta:focus {
+  outline: 2px solid var(--text);
+  outline-offset: 4px;
+}
+
+/* Анимация: появление снизу вверх с проявлением */
+@keyframes fadeInUp {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Адаптивность: на узких экранах чуть меньше отступов */
+@media (max-width: 480px) {
+  .hero {
+    padding: 1.5rem 1rem;
+  }
+
+  .hero__cta {
+    padding: 0.65rem 1.5rem;
+    font-size: 1.09rem;
+  }
+}
+
+/* ============================================
+   Секция «Мои навыки» — полноэкранная + вселенная
+   ============================================ */
+
+.skills {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.skills__bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: linear-gradient(
+    180deg,
+    #060b0d 0%,
+    var(--bg) 25%,
+    #040709 100%
+  );
+}
+
+.skills__universe {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.skills__star {
+  position: absolute;
+  border-radius: 50%;
+  background: #ccfbf1;
+  box-shadow:
+    0 0 6px 2px rgba(204, 251, 241, 0.9),
+    0 0 20px 4px rgba(94, 234, 212, 0.5);
+  animation: starTwinkle 3s ease-in-out infinite;
+}
+
+.skills__star--s { width: 3px; height: 3px; }
+.skills__star--m { width: 5px; height: 5px; }
+.skills__star--l { width: 8px; height: 8px; box-shadow: 0 0 12px 4px rgba(204, 251, 241, 0.95), 0 0 35px 10px rgba(94, 234, 212, 0.6); }
+
+.skills__star:nth-child(1) { left: 10%; top: 15%; animation-delay: 0s; }
+.skills__star:nth-child(2) { left: 75%; top: 20%; animation-delay: 0.5s; }
+.skills__star:nth-child(3) { left: 25%; top: 60%; animation-delay: 1s; }
+.skills__star:nth-child(4) { left: 85%; top: 70%; animation-delay: 1.5s; }
+.skills__star:nth-child(5) { left: 50%; top: 35%; animation-delay: 0.3s; }
+.skills__star:nth-child(6) { left: 15%; top: 80%; animation-delay: 2s; }
+.skills__star:nth-child(7) { left: 90%; top: 45%; animation-delay: 2.2s; }
+
+.skills__star--drift { animation: starTwinkle 3s ease-in-out infinite, starDrift 18s linear infinite; }
+.skills__star--drift:nth-child(6) { animation-delay: 0s, 0s; }
+.skills__star--drift:nth-child(7) { animation-delay: 0.5s, -8s; }
+
+.skills__content {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  padding: 4rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.skills__title {
+  margin: 0 0 2rem;
+  font-size: clamp(1.5rem, 4vw, 2rem);
+  font-weight: 700;
+  color: var(--text);
+  text-align: center;
+}
+
+.skills__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.5rem;
+  max-width: 900px;
+  margin: 0 auto 2rem;
+  width: 100%;
+}
+
+/* Карточка — 3D панель: глубина, фаска, подъём при наведении */
+.skills__card {
+  padding: 1.25rem 1.5rem;
+  background: linear-gradient(
+    180deg,
+    rgba(18, 26, 32, 0.98) 0%,
+    var(--surface) 100%
+  );
+  border: 1px solid rgba(0, 0, 0, 0.4);
+  border-radius: 14px;
+  box-shadow:
+    inset 0 1px 0 var(--surface-highlight),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.2),
+    0 4px 0 rgba(0, 0, 0, 0.2),
+    var(--shadow-soft),
+    0 0 0 1px rgba(126, 184, 245, 0.08);
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.skills__card:hover {
+  transform: translateY(-6px);
+  box-shadow:
+    inset 0 1px 0 var(--surface-highlight),
+    0 8px 0 rgba(0, 0, 0, 0.15),
+    var(--shadow-deep),
+    0 0 0 1px rgba(126, 184, 245, 0.15);
+}
+
+.skills__card:active {
+  transform: translateY(-2px);
+  box-shadow:
+    inset 0 2px 6px rgba(0, 0, 0, 0.3),
+    0 2px 12px rgba(0, 0, 0, 0.4);
+}
+
+.skills__card:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.skills__card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.skills__card-title {
+  margin: 0 0 0.5rem;
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--text);
+  flex: 1;
+  min-width: 0;
+}
+
+.skills__card-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+/* Кнопки карточки — 3D, тот же размер что и раньше */
+.skills__card-done {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--text-muted);
+  background: linear-gradient(
+    180deg,
+    rgba(30, 38, 48, 0.95) 0%,
+    rgba(15, 22, 30, 0.98) 100%
+  );
+  border: 1px solid rgba(0, 0, 0, 0.35);
+  border-radius: 8px;
+  cursor: pointer;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 2px 4px rgba(0, 0, 0, 0.3);
+  transition: color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease;
+}
+
+.skills__card-done:hover {
+  color: #34d399;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 3px 8px rgba(0, 0, 0, 0.35);
+  transform: translateY(-1px);
+}
+
+.skills__card-done--active {
+  color: #34d399;
+  background: linear-gradient(
+    180deg,
+    rgba(52, 211, 153, 0.25) 0%,
+    rgba(16, 185, 129, 0.2) 100%
+  );
+  border-color: rgba(52, 211, 153, 0.4);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.15),
+    0 2px 6px rgba(52, 211, 153, 0.2);
+}
+
+.skills__card-done--active:hover {
+  color: #10b981;
+  transform: translateY(-1px);
+}
+
+.skills__card-done:active {
+  transform: translateY(0);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.25);
+}
+
+.skills__card-done:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.skills__card-delete {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  font-size: 1.25rem;
+  line-height: 1;
+  color: var(--text-muted);
+  background: linear-gradient(
+    180deg,
+    rgba(30, 38, 48, 0.95) 0%,
+    rgba(15, 22, 30, 0.98) 100%
+  );
+  border: 1px solid rgba(0, 0, 0, 0.35);
+  border-radius: 8px;
+  cursor: pointer;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 2px 4px rgba(0, 0, 0, 0.3);
+  transition: color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease;
+}
+
+.skills__card-delete:hover {
+  color: #f87171;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 3px 8px rgba(0, 0, 0, 0.35);
+  transform: translateY(-1px);
+}
+
+.skills__card-delete:active {
+  transform: translateY(0);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.25);
+}
+
+.skills__card-delete:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Карточка изученного — 3D с зелёным акцентом */
+.skills__card--learned {
+  border-color: rgba(52, 211, 153, 0.25);
+  background: linear-gradient(
+    180deg,
+    rgba(12, 28, 24, 0.98) 0%,
+    rgba(8, 22, 20, 0.95) 100%
+  );
+  box-shadow:
+    inset 0 1px 0 rgba(52, 211, 153, 0.08),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.25),
+    0 4px 0 rgba(0, 0, 0, 0.2),
+    var(--shadow-soft),
+    0 0 0 1px rgba(52, 211, 153, 0.12);
+}
+
+.skills__card--learned .skills__card-title {
+  color: var(--text-muted);
+  text-decoration: line-through;
+}
+
+.skills__card-desc {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: var(--text-muted);
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition: max-height 0.35s ease, opacity 0.3s ease;
+}
+
+.skills__card--expanded .skills__card-desc {
+  max-height: 400px;
+  opacity: 1;
+}
+
+/* Кнопка «Добавить навык» — 3D в стиле CTA */
+.skills__add-btn {
+  display: block;
+  margin: 0 auto;
+  padding: 0.75rem 1.75rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  background: linear-gradient(
+    180deg,
+    #4c6ef5 0%,
+    var(--accent) 40%,
+    #1e2db8 100%
+  );
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.2),
+    0 4px 0 rgba(0, 0, 0, 0.25),
+    0 8px 24px rgba(40, 66, 235, 0.35);
+  transition: transform 0.15s ease, box-shadow 0.2s ease;
+}
+
+.skills__add-btn:hover {
+  transform: translateY(-3px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.25),
+    0 6px 0 rgba(0, 0, 0, 0.2),
+    0 12px 32px rgba(40, 66, 235, 0.4);
+}
+
+.skills__add-btn:active {
+  transform: translateY(1px);
+  box-shadow:
+    inset 0 2px 6px rgba(0, 0, 0, 0.35),
+    0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.skills__add-btn:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+}
+
+@media (max-width: 480px) {
+  .skills__content {
+    padding: 3rem 1rem;
+  }
+
+  .skills__grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+}
+
+/* ============================================
+   Секция «Мой индекс навыков» — полноэкранная + вселенная
+   ============================================ */
+
+.index {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.index__bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: linear-gradient(
+    180deg,
+    #060b0d 0%,
+    var(--bg) 25%,
+    #040709 100%
+  );
+}
+
+.index__universe {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.index__star {
+  position: absolute;
+  border-radius: 50%;
+  background: #ccfbf1;
+  box-shadow:
+    0 0 6px 2px rgba(204, 251, 241, 0.9),
+    0 0 20px 4px rgba(94, 234, 212, 0.5);
+  animation: starTwinkle 3s ease-in-out infinite;
+}
+
+.index__star--s { width: 3px; height: 3px; }
+.index__star--m { width: 5px; height: 5px; }
+.index__star--l { width: 8px; height: 8px; box-shadow: 0 0 12px 4px rgba(204, 251, 241, 0.95), 0 0 35px 10px rgba(94, 234, 212, 0.6); }
+
+.index__star:nth-child(1) { left: 18%; top: 12%; animation-delay: 0s; }
+.index__star:nth-child(2) { left: 82%; top: 18%; animation-delay: 0.6s; }
+.index__star:nth-child(3) { left: 35%; top: 65%; animation-delay: 1.2s; }
+.index__star:nth-child(4) { left: 70%; top: 75%; animation-delay: 1.8s; }
+.index__star:nth-child(5) { left: 5%; top: 45%; animation-delay: 0.2s; }
+.index__star:nth-child(6) { left: 55%; top: 8%; animation-delay: 2s; }
+.index__star:nth-child(7) { left: 95%; top: 55%; animation-delay: 2.5s; }
+
+.index__star--drift { animation: starTwinkle 3s ease-in-out infinite, starDrift 18s linear infinite; }
+.index__star--drift:nth-child(6) { animation-delay: 0s, -5s; }
+.index__star--drift:nth-child(7) { animation-delay: 0.5s, -12s; }
+
+.index__content {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  padding: 4rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.index__content--scaled {
+  transform: scale(1.25);
+  transform-origin: center center;
+}
+
+.index__title {
+  margin: 0 0 2rem;
+  font-size: clamp(1.5rem, 4vw, 2rem);
+  font-weight: 700;
+  color: var(--text);
+  text-align: center;
+}
+
+.index__panel {
+  max-width: 520px;
+  margin: 0 auto;
+  padding: 2rem 1.75rem;
+  background: linear-gradient(
+    180deg,
+    rgba(18, 26, 32, 0.98) 0%,
+    var(--surface) 100%
+  );
+  border: 1px solid rgba(0, 0, 0, 0.4);
+  border-radius: 14px;
+  box-shadow:
+    inset 0 1px 0 var(--surface-highlight),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.2),
+    0 4px 0 rgba(0, 0, 0, 0.2),
+    var(--shadow-soft),
+    0 0 0 1px rgba(126, 184, 245, 0.08);
+}
+
+.index__row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.index__row:last-of-type {
+  margin-bottom: 0;
+}
+
+.index__label {
+  flex: 0 0 140px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.index__range {
+  flex: 1;
+  height: 10px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 5px;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+.index__range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 8px;
+  background: linear-gradient(
+    180deg,
+    rgba(140, 180, 240, 0.95) 0%,
+    var(--text) 50%,
+    #4a7bc4 100%
+  );
+  border: 1px solid rgba(0, 0, 0, 0.3);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.25),
+    0 2px 6px rgba(0, 0, 0, 0.35);
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.2s ease;
+}
+
+.index__range::-webkit-slider-thumb:hover {
+  transform: scale(1.08);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.3),
+    0 3px 10px rgba(126, 184, 245, 0.3);
+}
+
+.index__range::-moz-range-thumb {
+  width: 22px;
+  height: 22px;
+  border-radius: 8px;
+  background: linear-gradient(
+    180deg,
+    rgba(140, 180, 240, 0.95) 0%,
+    var(--text) 50%,
+    #4a7bc4 100%
+  );
+  border: 1px solid rgba(0, 0, 0, 0.3);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.25),
+    0 2px 6px rgba(0, 0, 0, 0.35);
+  cursor: pointer;
+}
+
+.index__output {
+  flex: 0 0 2.5rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text);
+  text-align: right;
+}
+
+.index__gauge-wrap {
+  margin-top: 2rem;
+  padding-top: 1.75rem;
+  border-top: 1px solid rgba(126, 184, 245, 0.12);
+}
+
+.index__gauge-track {
+  height: 14px;
+  background: rgba(0, 0, 0, 0.45);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.5);
+  margin-bottom: 1rem;
+}
+
+.index__gauge-fill {
+  height: 100%;
+  border-radius: 8px;
+  background: linear-gradient(
+    90deg,
+    #3b82c6 0%,
+    var(--text) 50%,
+    #5eead4 100%
+  );
+  box-shadow: 0 0 20px rgba(94, 234, 212, 0.35);
+  transition: width 0.4s ease;
+}
+
+.index__result {
+  margin: 0;
+  font-size: 1rem;
+  color: var(--text-muted);
+}
+
+.index__percent {
+  font-weight: 700;
+  color: var(--text);
+}
+
+.index__desc {
+  color: var(--text-muted);
+}
+
+@media (max-width: 520px) {
+  .index__content {
+    padding: 3rem 1rem;
+  }
+
+  .index__panel {
+    padding: 1.5rem 1.25rem;
+  }
+
+  .index__row {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .index__label {
+    flex: 0 0 100%;
+  }
+
+  .index__output {
+    flex: 0 0 auto;
+    margin-left: auto;
+  }
+}
+
+/* ============================================
+   Секция «Связаться со мной»
+   ============================================ */
+
+.contact {
+  position: relative;
+  padding: 4rem 1.5rem 4.5rem;
+  background: linear-gradient(
+    180deg,
+    #040709 0%,
+    #05080a 40%,
+    #030508 100%
+  );
+}
+
+.contact__content {
+  max-width: 520px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.contact__title {
+  margin: 0 0 2rem;
+  font-size: clamp(1.6rem, 4.2vw, 2.2rem);
+  font-weight: 700;
+  color: var(--text);
+}
+
+.contact__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.9rem 2.2rem;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: #fff;
+  text-decoration: none;
+  border-radius: 999px;
+  background: linear-gradient(
+    180deg,
+    #3b82f6 0%,
+    #2563eb 40%,
+    #1d4ed8 100%
+  );
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.4),
+    0 4px 0 rgba(0, 0, 0, 0.35),
+    0 12px 32px rgba(37, 99, 235, 0.55);
+  transition: transform 0.15s ease, box-shadow 0.2s ease;
+}
+
+.contact__btn-icon {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  margin-right: 0.6rem;
+  border-radius: 999px;
+  background: radial-gradient(circle at 30% 30%, #e0f2ff 0%, #38bdf8 40%, #0ea5e9 100%);
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.6);
+}
+
+.contact__btn-icon::before {
+  content: '';
+  width: 0.9rem;
+  height: 0.9rem;
+  border-radius: 0.2rem;
+  background:
+    linear-gradient(135deg, transparent 0 40%, #e0f2ff 40% 60%, transparent 60% 100%);
+  transform: translateX(1px) rotate(15deg);
+}
+
+.contact__btn-text {
+  display: inline-block;
+}
+
+.contact__btn:hover {
+  transform: translateY(-3px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.25),
+    0 6px 0 rgba(0, 0, 0, 0.3),
+    0 16px 40px rgba(37, 99, 235, 0.7);
+}
+
+.contact__btn:active {
+  transform: translateY(1px);
+  box-shadow:
+    inset 0 2px 4px rgba(0, 0, 0, 0.4),
+    0 2px 10px rgba(15, 23, 42, 0.9);
+}
+
+.contact__btn:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+}
